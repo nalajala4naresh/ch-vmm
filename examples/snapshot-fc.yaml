@@ -1,0 +1,8 @@
+apiVersion: cloudhypervisor.quill.today/v1beta1
+kind: VMSnapShot 
+metadata:
+  name: jammy-fc-snapshot
+  namespace: default
+spec:
+  vm: ubuntu-fc
+  bucket: vmm-snapshots

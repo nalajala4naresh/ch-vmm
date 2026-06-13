@@ -1,0 +1,6 @@
+resources:
+  - crd
+  - namespace.yaml
+  - ch-vmm-controller
+  - ch-vmm-daemon
+  

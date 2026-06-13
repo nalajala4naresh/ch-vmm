@@ -1,0 +1,15 @@
+apiVersion: cloudhypervisor.quill.today/v1beta1 
+kind: VirtualDisk
+metadata:
+  name: "jammy-disk"
+spec:
+  storage:
+    resources:
+      requests:
+        storage: 10Gi
+    volumeMode: Filesystem
+    accessModes:
+      - ReadWriteOnce
+  source:
+    http:
+      url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"

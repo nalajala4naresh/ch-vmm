@@ -1,0 +1,16 @@
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: "ubuntu-ch-k8s-jammy"
+spec:
+  storage:
+    resources:
+      requests:
+        storage: 10Gi
+    volumeMode: Filesystem
+    accessModes:
+      - ReadWriteOnce
+  source:
+   registry:
+      pullMethod: node
+      url: "docker://nalajalanaresh/capch-disk-cdi-1.33.0" 

@@ -1,0 +1,9 @@
+apiVersion: cloudhypervisor.quill.today/v1beta1
+kind: VMSnapShot 
+metadata:
+  name: jammy-snapshot
+  namespace: default
+spec:
+  skipMemorySnapshot: false
+  vm: ubuntu-ch
+  bucket: gcs://ch-snapshots

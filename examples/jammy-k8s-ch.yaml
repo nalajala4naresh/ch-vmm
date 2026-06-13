@@ -1,0 +1,37 @@
+apiVersion: cloudhypervisor.quill.today/v1beta1
+kind: VirtualMachine
+metadata:
+  name: ubuntu-ch
+  namespace: default
+spec:
+  instance:
+    cpu:
+     sockets: 1
+     coresPerSocket: 2
+    kernel:
+      image: nalajalanaresh/capch-kernel-5.15.12 
+      cmdline: "console=ttyS0 root=/dev/vda1 rw ds=nocloud"
+    memory:
+      size: 4Gi
+    disks:
+      - name: ubuntu
+      - name: cloud-init
+    interfaces:
+      - name: pod
+        masquerade: {}
+  volumes:
+    - name: ubuntu
+      dataVolume:
+        volumeName: ubuntu-ch-k8s-jammy 
+
+    - name: cloud-init
+      cloudInit:
+        userData: |-
+          #cloud-config
+          password: password
+          chpasswd: { expire: False }
+          ssh_pwauth: True
+
+  networks:
+    - name: pod
+      pod: {}

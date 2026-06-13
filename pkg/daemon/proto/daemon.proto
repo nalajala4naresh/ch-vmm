@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package vmservice;
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/nalajala4naresh/ch-vmm/pkg/daemon/proto";
+
+message GetVmstatusRequest {
+
+    string vmname = 1;
+    string namespace = 2; 
+    
+}
+enum VmAction {
+    Unknown = 0;
+    Paused = 1;
+    Resumed = 2;
+  }
+
+message VmStatus {
+    string status = 1;
+    string vmpodname = 3;
+    string vmpoduid = 4; 
+}
+
+message GetVmStatusResponse {
+    VmStatus status = 1;
+    
+}
+
+
+message PauseVMRequest {
+    string name = 1;
+    string namespace = 2;
+}
+
+message ResumeVMRequest {
+    string name = 1;
+    string namespace = 2;
+
+}
+
+message RebootVMRequest {
+    string name = 1;
+    string namespace = 2;
+}
+
+
+
+message CreateVMSnapshot{
+    string id = 1;
+    string destination = 2;
+    string name = 3;
+    string namespace = 4;
+    bool upload = 5;
+    string s3bucket = 6;
+    string gcsbucket = 7;
+}
+
+message RestoreVMSnapshot{
+    string id = 1;
+    string destination = 2;
+    string name = 3;
+    string namespace = 4;
+
+}
+
+service VmService {
+    rpc GetVMStatus(GetVmstatusRequest) returns (GetVmStatusResponse);
+    rpc PauseVM(PauseVMRequest) returns (google.protobuf.Empty);
+    rpc ResumeVM(ResumeVMRequest) returns (google.protobuf.Empty);
+    rpc RebootVM(RebootVMRequest) returns (google.protobuf.Empty);
+    rpc CreateSnapshot(CreateVMSnapshot) returns (google.protobuf.Empty);
+    rpc RestoreSnapshot(RestoreVMSnapshot) returns (google.protobuf.Empty);
+
+}

@@ -1,0 +1,9 @@
+apiVersion: cloudhypervisor.quill.today/v1beta1
+kind: VMReplicaSet
+metadata:
+  labels:
+    app.kubernetes.io/name: virtmanager
+    app.kubernetes.io/managed-by: kustomize
+  name: vmreplicaset-sample
+spec:
+  # TODO(user): Add fields here

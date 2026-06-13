@@ -1,0 +1,12 @@
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: jammy-fc-upload
+spec:
+  contentType: archive
+  source:
+      upload: {}
+  storage:
+    resources:
+      requests:
+        storage: 40Gi

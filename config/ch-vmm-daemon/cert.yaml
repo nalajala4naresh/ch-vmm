@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ch-vmm-daemon-cert
+  namespace: ch-vmm-system
+spec:
+  issuerRef:
+    kind: Issuer
+    name: ch-vmm-daemon-cert-issuer
+  dnsNames:
+    - "ch-vmm-daemon.ch-vmm-system.svc"
+    - "ch-vmm-daemon.ch-vmm-system.svc.cluster.local"
+    - "*.ch-vmm-daemon.ch-vmm-system.svc"
+    - "*.ch-vmm-daemon.ch-vmm-system.svc.cluster.local"
+  secretName: ch-vmm-daemon-cert

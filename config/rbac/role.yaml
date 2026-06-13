@@ -1,0 +1,94 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cloudhypervisor.quill.today
+  resources:
+  - virtualmachinemigrations
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cloudhypervisor.quill.today
+  resources:
+  - virtualmachinemigrations/status
+  - virtualmachines/status
+  - vmpools/status  
+  - vmrollbacks/status
+  - vmsets/status
+  - vmsnapshots/status
+  - virtualdisks/status
+  - virtualdisksnapshots/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloudhypervisor.quill.today
+  resources:
+  - virtualmachines
+  - vmpools
+  - vmrollbacks
+  - vmsets
+  - vmsnapshots
+  - virtualdisks
+  - virtualdisksnapshots
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloudhypervisor.quill.today
+  resources:
+  - virtualmachines/finalizers
+  - vmpools/finalizers
+  - vmrollbacks/finalizers
+  - vmsets/finalizers
+  - vmsnapshots/finalizers
+  - virtualdisks/finalizers
+  - virtualdisksnapshots/finalizers
+  verbs:
+  - update
+- apiGroups: 
+    - snapshot.storage.k8s.io
+  resources: 
+    - volumesnapshots 
+    - volumesnapshotcontents
+    - volumesnapshotclasses
+  verbs: ["get", "list", "watch", "create", "delete", "update", "patch"]

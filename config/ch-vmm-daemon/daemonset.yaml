@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ch-vmm-daemon
+  namespace: ch-vmm-system
+spec:
+  selector:
+    matchLabels:
+      name: ch-vmm-daemon
+  template:
+    metadata:
+      labels:
+        name: ch-vmm-daemon
+    spec:
+      serviceAccountName: ch-vmm-daemon
+      hostPID: true
+      containers:
+        - name: ch-vmm-daemon
+          image: ch-vmm-daemon
+          securityContext:
+            privileged: true
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          args:
+            - --zap-time-encoding=iso8601
+          volumeMounts:
+            - name: daemon-config
+              mountPath: /config
+            - name: kubelet-pods
+              mountPath: /pods
+              mountPropagation: Bidirectional
+            - name: cert
+              mountPath: /var/lib/virtmanager/daemon/cert
+              readOnly: true
+            - name: device-plugins
+              mountPath: /var/lib/kubelet/device-plugins
+            - name: devices
+              mountPath: /dev
+              mountPropagation: HostToContainer
+            - name: ch-vmm
+              mountPath: /var/run/ch-vmm
+               
+      volumes:
+        - name: kubelet-pods
+          hostPath:
+            path: /var/lib/kubelet/pods
+        - name: cert
+          secret:
+            secretName: ch-vmm-daemon-cert
+            defaultMode: 420
+        - name: daemon-config 
+          configMap:
+            name: daemon-config
+        - name: device-plugins
+          hostPath:
+            path: /var/lib/kubelet/device-plugins
+        - name: devices
+          hostPath:
+            path: /dev
+        - name: ch-vmm
+          hostPath:
+            path: /var/run/ch-vmm

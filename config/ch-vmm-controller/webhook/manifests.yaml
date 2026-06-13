@@ -1,0 +1,232 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-cloudhypervisor-quill-today-v1beta1-virtualmachine
+  failurePolicy: Fail
+  name: mvirtualmachine.kb.io
+  rules:
+  - apiGroups:
+    - cloudhypervisor.quill.today
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - virtualmachines
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-cloudhypervisor-quill-today-v1beta1-virtualdisk
+  failurePolicy: Fail
+  name: mvirtualdisk-v1beta1.kb.io
+  rules:
+  - apiGroups:
+    - cloudhypervisor.quill.today
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - virtualdisks
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-cloudhypervisor-quill-today-v1beta1-virtualdisksnapshot
+  failurePolicy: Fail
+  name: mvirtualdisksnapshot-v1beta1.kb.io
+  rules:
+  - apiGroups:
+    - cloudhypervisor.quill.today
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - virtualdisksnapshots
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-cloudhypervisor-quill-today-v1beta1-vmpool
+  failurePolicy: Fail
+  name: mvmpool-v1beta1.kb.io
+  rules:
+  - apiGroups:
+    - cloudhypervisor.quill.today
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - vmpools
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-cloudhypervisor-quill-today-v1beta1-vmset
+  failurePolicy: Fail
+  name: mvmset-v1beta1.kb.io
+  rules:
+  - apiGroups:
+    - cloudhypervisor.quill.today
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - vmsets
+  sideEffects: None
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-cloudhypervisor-quill-today-v1beta1-virtualdisk
+  failurePolicy: Fail
+  name: vvirtualdisk-v1beta1.kb.io
+  rules:
+  - apiGroups:
+    - cloudhypervisor.quill.today
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - virtualdisks
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-cloudhypervisor-quill-today-v1beta1-virtualdisksnapshot
+  failurePolicy: Fail
+  name: vvirtualdisksnapshot-v1beta1.kb.io
+  rules:
+  - apiGroups:
+    - cloudhypervisor.quill.today
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - virtualdisksnapshots
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-cloudhypervisor-quill-today-v1beta1-virtualmachine
+  failurePolicy: Fail
+  name: vvirtualmachine.kb.io
+  rules:
+  - apiGroups:
+    - cloudhypervisor.quill.today
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - virtualmachines
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-cloudhypervisor-quill-today-v1beta1-virtualmachinemigration
+  failurePolicy: Fail
+  name: vvirtualmachinemigration.kb.io
+  rules:
+  - apiGroups:
+    - cloudhypervisor.quill.today
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - virtualmachinemigrations
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-cloudhypervisor-quill-today-v1beta1-vmset
+  failurePolicy: Fail
+  name: vvmset-v1beta1.kb.io
+  rules:
+  - apiGroups:
+    - cloudhypervisor.quill.today
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - vmsets
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-cloudhypervisor-quill-today-v1beta1-vmpool
+  failurePolicy: Fail
+  name: vvmpool-v1beta1.kb.io
+  rules:
+  - apiGroups:
+    - cloudhypervisor.quill.today
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - vmpools
+  sideEffects: None
