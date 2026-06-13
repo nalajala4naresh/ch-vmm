@@ -1,0 +1,9 @@
+apiVersion: cloudhypervisor.quill.today/v1beta1
+kind: VMSet
+metadata:
+  labels:
+    app.kubernetes.io/name: ch-vmm
+    app.kubernetes.io/managed-by: kustomize
+  name: vmset-sample
+spec:
+  # TODO(user): Add fields here

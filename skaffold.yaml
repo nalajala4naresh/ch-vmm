@@ -1,0 +1,26 @@
+apiVersion: skaffold/v2beta28
+kind: Config
+metadata:
+  name: ch-vmm
+build:
+  local:
+    useBuildkit: true
+  artifacts:
+    - image: ch-vmm-controller
+      docker:
+        dockerfile: build/ch-vmm-controller/Dockerfile
+      requires:
+        - image: ch-vmm-prerunner
+          alias: PRERUNNER_CH_IMAGE
+    - image: ch-vmm-daemon
+      docker:
+        dockerfile: build/ch-vmm-daemon/Dockerfile 
+    - image: ch-vmm-prerunner
+      docker:
+        dockerfile: build/ch-vmm-prerunner/Dockerfile.ch
+deploy:
+  kustomize:
+    paths:
+      - config/crd
+      - config/ch-vmm-controller/default
+      - config/ch-vmm-daemon

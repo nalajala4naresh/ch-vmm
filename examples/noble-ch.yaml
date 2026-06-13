@@ -1,0 +1,42 @@
+apiVersion: cloudhypervisor.quill.today/v1beta1
+kind: VirtualMachine
+metadata:
+  name: ubuntu-ch-noble
+  namespace: default
+spec:
+  instance:
+    kernel:
+      image: nalajalanaresh/ch-kernel-x86:6.12
+      cmdline: "console=ttyS0 root=/dev/vda1 rw ds=nocloud"
+    memory:
+      size: 4Gi
+    disks:
+      - name: ubuntu
+      - name: cloud-init
+    interfaces:
+      - name: pod
+        masquerade: {}
+  volumes:
+    - name: ubuntu
+      dataVolume:
+        volumeName: ubuntu-ch-noble
+
+    - name: cloud-init
+      cloudInit:
+        userData: |-
+          #cloud-config
+          users:
+            - name: naresh
+              groups: sudo
+              sudo: ALL=(ALL) NOPASSWD:ALL
+              shell: /bin/bash
+              passwd: "$6$somethinghashed"
+          chpasswd:
+              list: |
+                 naresh:password
+              expire: False 
+          ssh_pwauth: True
+
+  networks:
+    - name: pod
+      pod: {}

@@ -1,0 +1,54 @@
+apiVersion: cloudhypervisor.quill.today/v1beta1
+kind: VMPool
+metadata:
+  name: ubuntu-ch-noble-pool
+  namespace: tenant1
+spec:
+  selector:
+    matchLabels:
+      requestor: naresh
+  replicas: 1
+  virtualMachineTemplate:
+    metadata:
+      labels:
+        requestor: naresh
+    spec:
+      instance:
+       memory:
+        size: 1Gi
+       disks:
+        - name: jammy
+        - name: cloud-init
+       interfaces:
+        - name: pod
+      volumes:
+      - name: jammy
+        dataVolume:
+          volumeName: jammy
+
+      - name: cloud-init
+        cloudInit:
+          userData: |-
+           #cloud-config
+           password: password
+           chpasswd: { expire: False }
+           ssh_pwauth: True
+      networks:
+      - name: pod
+        pod: {}
+  dataVolumeTemplates:
+    - metadata:
+       name: jammy
+         #annotations:
+         #volume.kubernetes.io/selected-node: "naresh-ch-vmm"
+      spec:
+        storage:
+         resources:
+          requests:
+           storage: 5Gi
+         volumeMode: Filesystem
+         accessModes:
+         - ReadWriteOnce
+        source:
+         http:
+          url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"

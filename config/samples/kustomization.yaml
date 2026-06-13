@@ -1,0 +1,8 @@
+## Append samples of your project ##
+resources:
+- v1beta1_vmsnapshot.yaml
+- v1beta1_vmrollback.yaml
+- v1beta1_vmpool.yaml
+- v1beta1_vmreplicaset.yaml
+- v1beta1_vmset.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

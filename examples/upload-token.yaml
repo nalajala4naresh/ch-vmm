@@ -1,0 +1,8 @@
+apiVersion: upload.cdi.kubevirt.io/v1beta1
+kind: UploadTokenRequest
+metadata:
+  name: upload-token
+  namespace: default
+spec:
+  pvcName: jammy-fc-upload
+

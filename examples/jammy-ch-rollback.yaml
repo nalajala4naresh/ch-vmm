@@ -1,0 +1,9 @@
+apiVersion: cloudhypervisor.quill.today/v1beta1
+kind: VMRollback
+metadata:
+  labels:
+    app.kubernetes.io/name: ch-vmm
+    app.kubernetes.io/managed-by: kustomize
+  name: jammy-ch-rollback3 
+spec:
+  snapshot: jammy-snapshot

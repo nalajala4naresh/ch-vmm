@@ -1,0 +1,19 @@
+---
+# Live-migrate a running VirtualMachine to another node.
+#
+# The controller picks a suitable target node, brings up the VM on the
+# target, transfers state, and tears down the source. Watch progress with:
+#
+#   kubectl get vmm vm-migration-sample -w
+#
+# (columns: VM / SOURCE / TARGET / STATUS)
+#
+# spec.vmName must reference an existing, running VirtualMachine in the
+# same namespace (e.g. the one created by examples/jammy-ch.yaml).
+apiVersion: cloudhypervisor.quill.today/v1beta1
+kind: VirtualMachineMigration
+metadata:
+  name: vm-migration
+  namespace: default
+spec:
+  vmName: ubuntu-ch-noble

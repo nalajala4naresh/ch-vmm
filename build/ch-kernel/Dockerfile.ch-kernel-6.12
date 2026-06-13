@@ -1,0 +1,48 @@
+FROM ubuntu:24.04 AS builder
+
+RUN apt update
+# Essential build tools and compilers
+RUN  apt-get install -y build-essential gcc make binutils 
+
+# Development tools and libraries
+RUN apt-get install -y  git fakeroot libncurses-dev libssl-dev ccache  bison flex libelf-dev
+
+# Documentation tools (if you want to build kernel documentation)
+RUN apt-get install -y  xmlto docbook-utils kmod  asciidoc-base ghostscript graphviz  python3-sphinx python3-sphinx-rtd-theme
+
+# Compression libraries (for different kernel compression methods)
+RUN  apt-get install -y  liblz4-dev lz4  libzstd-dev zstd  
+
+# Firmware related tools
+RUN  apt-get install -y  dwarves  debhelper
+
+
+# DKMS support (if needed)
+RUN  apt-get install -y  dkms
+
+# If building Debian/Ubuntu packages
+RUN  apt-get install -y kernel-wedge  cpio bc
+
+
+WORKDIR /workspace
+
+RUN git clone --depth 1 https://github.com/cloud-hypervisor/linux.git -b ch-6.12 linux-cloud-hypervisor
+COPY linux-6.12-config-x86_64 linux-cloud-hypervisor/
+RUN set -eux; \
+    cd linux-cloud-hypervisor; \
+    case "$(uname -m)" in \
+        'x86_64') \
+            cp linux-6.12-config-x86_64 .config; \
+            KCFLAGS="-Wa,-mx86-used-note=no" make bzImage -j `nproc`; \
+            cp arch/x86/boot/compressed/vmlinux.bin /vmlinux; \
+            ;; \
+        # 'aarch64') \
+        #     cp linux-config-6.12-aarch64 .config; \
+        #     make -j `nproc`; \
+        #     cp arch/arm64/boot/Image /vmlinux; \
+        #     ;; \
+        *) echo >&2 "error: unsupported architecture '$(uname -m)'"; exit 1 ;; \
+    esac
+FROM nalajalanaresh/virtmanager-kernel-base
+
+COPY --from=builder /vmlinux /vmlinux

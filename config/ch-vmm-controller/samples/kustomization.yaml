@@ -1,0 +1,5 @@
+## Append samples of your project ##
+resources:
+- v1beta1_virtualmachine.yaml
+- v1beta1_virtualmachinemigration.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

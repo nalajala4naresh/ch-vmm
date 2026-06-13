@@ -1,0 +1,128 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.1
+  name: vmsnapshots.cloudhypervisor.quill.today
+spec:
+  group: cloudhypervisor.quill.today
+  names:
+    kind: VMSnapShot
+    listKind: VMSnapShotList
+    plural: vmsnapshots
+    shortNames:
+    - vmsnap
+    singular: vmsnapshot
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: VMSnapShot is the Schema for the vmsnapshots API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: VMSnapShotSpec defines the desired state of VMSnapShot.
+            properties:
+              accessKey:
+                type: string
+              bucket:
+                type: string
+              path:
+                type: string
+              region:
+                type: string
+              secretKey:
+                type: string
+              sessionToken:
+                type: string
+              skipMemorySnapshot:
+                type: boolean
+              vm:
+                description: |-
+                  INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                  Important: Run "make" to regenerate code after modifying this file
+                type: string
+            required:
+            - skipMemorySnapshot
+            type: object
+          status:
+            description: VMSnapShotStatus defines the observed state of VMSnapShot.
+            properties:
+              diskStatus:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      type: string
+                    name:
+                      type: string
+                    ready:
+                      type: boolean
+                    reason:
+                      type: string
+                    snapName:
+                      type: string
+                  required:
+                  - name
+                  - ready
+                  type: object
+                type: array
+              memoryStatus:
+                properties:
+                  bucket:
+                    type: string
+                  lastTransitionTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  name:
+                    type: string
+                  objectKey:
+                    type: string
+                  ready:
+                    type: boolean
+                  reason:
+                    type: string
+                required:
+                - bucket
+                - name
+                - objectKey
+                - ready
+                type: object
+              phase:
+                enum:
+                - Created
+                - Failed
+                - Scheduled
+                - InProgress
+                - VMRestoreSpecFailed
+                - VMRestoreSpecCreated
+                - ReadyToUse
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

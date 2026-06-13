@@ -1,0 +1,88 @@
+---
+# containerd-patch DaemonSet
+#
+# Enables the containerd CRI option `device_ownership_from_security_context`
+# on every node and restarts containerd so the change takes effect.
+#
+# With this option enabled, the uid/gid of device nodes injected into a
+# container (e.g. /dev/kvm, /dev/vhost-net, /dev/vhost-vsock, /dev/net/tun)
+# are taken from the container's securityContext (runAsUser/runAsGroup)
+# instead of always being root:root. This lets ch-vmm VM pods access host
+# devices with the correct ownership without running fully privileged.
+#
+# Ref: https://github.com/containerd/containerd/blob/main/docs/cri/config.md
+#
+# NOTE: this restarts containerd on each node. Running pods keep running
+# (containerd restart does not kill them), but expect a brief CRI blip.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: containerd-patch
+  namespace: ch-vmm-system
+  labels:
+    app: containerd-patch
+spec:
+  selector:
+    matchLabels:
+      app: containerd-patch
+  template:
+    metadata:
+      labels:
+        app: containerd-patch
+    spec:
+      hostPID: true
+      # Tolerate everything so the patch lands on every node (control-plane too).
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: patch
+          image: alpine:3.20
+          securityContext:
+            privileged: true
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+
+              CONFIG=/host/etc/containerd/config.toml
+
+              echo "[containerd-patch] node=${NODE_NAME} config=${CONFIG}"
+
+              if [ ! -f "${CONFIG}" ]; then
+                echo "[containerd-patch] generating default config.toml"
+                chroot /host containerd config default > "${CONFIG}"
+              fi
+
+              if grep -q 'device_ownership_from_security_context' "${CONFIG}"; then
+                echo "[containerd-patch] option already present, ensuring it is true"
+                sed -i \
+                  's/device_ownership_from_security_context.*/device_ownership_from_security_context = true/' \
+                  "${CONFIG}"
+              else
+                echo "[containerd-patch] injecting option under [plugins.\"io.containerd.grpc.v1.cri\"]"
+                # Insert the key immediately after the cri plugin table header.
+                sed -i \
+                  '/\[plugins."io.containerd.grpc.v1.cri"\]/a\  device_ownership_from_security_context = true' \
+                  "${CONFIG}"
+              fi
+
+              echo "[containerd-patch] restarting containerd on host"
+              chroot /host systemctl restart containerd
+
+              echo "[containerd-patch] done; sleeping"
+              # Keep the pod Running so it does not crash-loop / re-restart
+              # containerd. Deleting the DaemonSet removes these pods.
+              while true; do sleep 3600; done
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: host
+              mountPath: /host
+      volumes:
+        - name: host
+          hostPath:
+            path: /
