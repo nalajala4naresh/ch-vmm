@@ -565,6 +565,20 @@ func (r *VMReconciler) chReconcile(ctx context.Context, vm *v1beta1.VirtualMachi
 						vm.Status.VMPodName = vm.Status.Migration.TargetVMPodName
 						vm.Status.VMPodUID = vm.Status.Migration.TargetVMPodUID
 					default:
+						// The source has already been torn down, so this wait
+						// cannot be infinite: bound it and fail loudly if the
+						// target never comes up.
+						if migrationControlBlock.SentDeadline.IsZero() {
+							migrationControlBlock.SentDeadline = time.Now().Add(migrationSentTimeout)
+							r.migrationControlBlocks[vm.UID] = migrationControlBlock
+						}
+						if time.Now().After(migrationControlBlock.SentDeadline) {
+							r.Recorder.Eventf(vm, corev1.EventTypeWarning, "FailedVMMigrate",
+								"target VM did not reach Running within %s after migration; VM may require manual recovery on node %s",
+								migrationSentTimeout, vm.Status.Migration.TargetNodeName)
+							vm.Status.Migration.Phase = v1beta1.VirtualMachineMigrationFailed
+							break
+						}
 						log.Info("waiting target VM being Running")
 						return nil
 					}
@@ -1109,7 +1123,16 @@ type migrationControlBlock struct {
 	SendMigrationCancelFunc    context.CancelFunc
 	ReceiveMigrationErrCh      <-chan error
 	ReceiveMigrationCancelFunc context.CancelFunc
+	// SentDeadline bounds how long the target waits for the migrated VM to
+	// reach the Running state once the source has been sent. After the source
+	// is torn down (PONR) an indefinite wait would leave the VM unrecoverable
+	// with no signal, so we fail the migration past this deadline.
+	SentDeadline time.Time
 }
+
+// migrationSentTimeout is the maximum time the target node waits for the
+// received VM to start running before declaring the migration failed.
+const migrationSentTimeout = 180 * time.Second
 
 type vmMountRecord struct {
 	Volumes []volumeMountRecord `json:"volumes,omitempty"`

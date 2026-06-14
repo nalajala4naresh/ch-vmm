@@ -162,9 +162,68 @@ func (r *VMMReconciler) mirror(ctx context.Context, vmm *v1beta1.VirtualMachineM
 			"VM %q migrated to node %q", vm.Name, m.TargetNodeName)
 		return r.clearVMMigration(ctx, vm)
 	case v1beta1.VirtualMachineMigrationFailed:
+		return r.handleFailedMigration(ctx, vmm, vm)
+	}
+	return nil
+}
+
+// handleFailedMigration recovers from a failed migration. Whether it is safe to
+// reclaim the target depends on the point of no return (PONR) — the moment the
+// source VM is torn down on cutover:
+//
+//   - Before the PONR the source VM is still running and the target Pod is a
+//     safe-to-delete orphan, so we reclaim it and leave the VM on the source.
+//   - After the PONR the source is gone and the target Pod may hold the only
+//     live copy of the VM, so we must NOT delete it; we surface the failure
+//     loudly for manual recovery instead.
+//
+// We detect which side of the PONR we are on from the source VM Pod: it is
+// still Running/Pending before cutover, and Succeeded/absent after it.
+func (r *VMMReconciler) handleFailedMigration(ctx context.Context, vmm *v1beta1.VirtualMachineMigration, vm *v1beta1.VirtualMachine) error {
+	targetPodName := vm.Status.Migration.TargetVMPodName
+
+	sourceAlive := false
+	if vm.Status.VMPodName != "" {
+		var srcPod corev1.Pod
+		err := r.Get(ctx, types.NamespacedName{Name: vm.Status.VMPodName, Namespace: vm.Namespace}, &srcPod)
+		switch {
+		case err == nil:
+			sourceAlive = srcPod.Status.Phase == corev1.PodRunning || srcPod.Status.Phase == corev1.PodPending
+		case apierrors.IsNotFound(err):
+			sourceAlive = false
+		default:
+			return fmt.Errorf("get source VM pod: %s", err)
+		}
+	}
+
+	if sourceAlive {
+		// Safe abort: delete the orphaned target VM Pod (its hotplug volume
+		// Pods cascade via owner reference) and keep the VM on the source.
+		if targetPodName != "" {
+			if err := r.deletePodIfExists(ctx, vm.Namespace, targetPodName); err != nil {
+				return err
+			}
+		}
 		r.Recorder.Eventf(vmm, corev1.EventTypeWarning, "MigrationFailed",
-			"Migration of VM %q failed", vm.Name)
-		return r.clearVMMigration(ctx, vm)
+			"Migration of VM %q failed before cutover; VM remains on node %q, target Pod %q reclaimed",
+			vm.Name, vm.Status.NodeName, targetPodName)
+	} else {
+		// Past the PONR: the source is gone and the target may hold the only
+		// live VM state. Leave the target Pod in place for manual recovery.
+		r.Recorder.Eventf(vmm, corev1.EventTypeWarning, "MigrationFailedNeedsRecovery",
+			"Migration of VM %q failed after cutover; source is gone, target Pod %q left in place for manual recovery on node %q",
+			vm.Name, targetPodName, vm.Status.Migration.TargetNodeName)
+	}
+
+	return r.clearVMMigration(ctx, vm)
+}
+
+// deletePodIfExists deletes a Pod by name, treating an already-absent Pod as
+// success.
+func (r *VMMReconciler) deletePodIfExists(ctx context.Context, namespace, name string) error {
+	pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace}}
+	if err := r.Delete(ctx, pod); err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("delete target VM Pod %q: %s", name, err)
 	}
 	return nil
 }
