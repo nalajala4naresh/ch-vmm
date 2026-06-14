@@ -368,7 +368,7 @@ func (r *VirtualMachineReconciler) reconcile(ctx context.Context, vm *v1beta1.Vi
 				targetVMPodNotFound := false
 				if err := r.Get(ctx, targetVMPodKey, &targetVMPod); err != nil {
 					if apierrors.IsNotFound(err) {
-						vmPodNotFound = true
+						targetVMPodNotFound = true
 					} else {
 						return fmt.Errorf("get target VM Pod: %s", err)
 					}
