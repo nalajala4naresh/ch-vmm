@@ -175,8 +175,10 @@ func buildChVMConfig(ctx context.Context, vm *v1beta1.VirtualMachine) (*cloudhyp
 		for _, volume := range vm.Spec.Volumes {
 			if volume.Name == disk.Name {
 				diskConfig := cloudhypervisor.DiskConfig{
-					Id:     disk.Name,
-					Direct: true,
+					Id:        disk.Name,
+					Direct:    true,
+					ImageType: cloudhypervisor.ImageType("Raw"),
+					Sparse:    false,
 				}
 				switch {
 				case volume.ContainerDisk != nil:
