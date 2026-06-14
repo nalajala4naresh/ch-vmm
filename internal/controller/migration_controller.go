@@ -7,6 +7,8 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
@@ -24,9 +26,10 @@ type VMMReconciler struct {
 	Recorder record.EventRecorder
 }
 
-// +kubebuilder:rbac:groups=cloudhypervisor.quill.today,resources=virtualmachinemigrations,verbs=get;list;watch
+// +kubebuilder:rbac:groups=cloudhypervisor.quill.today,resources=virtualmachinemigrations,verbs=get;list;watch;update;patch
 // +kubebuilder:rbac:groups=cloudhypervisor.quill.today,resources=virtualmachinemigrations/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=cloudhypervisor.quill.today,resources=virtualmachines,verbs=get;list;watch
+// +kubebuilder:rbac:groups=cloudhypervisor.quill.today,resources=virtualmachines,verbs=get;list;watch;update;patch
+// +kubebuilder:rbac:groups=cloudhypervisor.quill.today,resources=virtualmachines/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;update;patch
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.0/pkg/reconcile
 
@@ -42,7 +45,7 @@ func (r *VMMReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 		return ctrl.Result{}, err
 	}
 
-	if !reflect.DeepEqual(vmm.Status, status) {
+	if !reflect.DeepEqual(vmm.Status, *status) {
 		if err := r.Status().Update(ctx, &vmm); err != nil {
 			if apierrors.IsConflict(err) {
 				return ctrl.Result{Requeue: true}, nil
@@ -54,65 +57,173 @@ func (r *VMMReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	return ctrl.Result{}, nil
 }
 
+// reconcile drives a VirtualMachineMigration. The heavy lifting (target Pod
+// creation, cloud-hypervisor send/receive) is performed by the VirtualMachine
+// controller and the node daemon, both of which key off
+// VirtualMachine.Status.Migration. This controller's job is to:
+//
+//  1. validate the migration is allowed (guard rails),
+//  2. stamp VirtualMachine.Status.Migration to kick off that pipeline,
+//  3. mirror the pipeline's progress back into the VMM status, and
+//  4. on terminal states, clear VirtualMachine.Status.Migration so the VM is
+//     eligible for future migrations (clear-on-success/failure).
 func (r *VMMReconciler) reconcile(ctx context.Context, vmm *v1beta1.VirtualMachineMigration) error {
 	log := ctrl.LoggerFrom(ctx)
-
-	// TODO: Add your reconcile logic here
 	log.Info("Reconciling VirtualMachineMigration", "vmm", vmm.Name)
 
-	// Get the source VM
-	var sourceVM v1beta1.VirtualMachine
-	if err := r.Get(ctx, types.NamespacedName{
-		Name:      vmm.Spec.VMName,
-		Namespace: vmm.Namespace,
-	}, &sourceVM); err != nil {
+	// Terminal VMM states: nothing left to do.
+	if vmm.Status.Phase == v1beta1.VirtualMachineMigrationSucceeded ||
+		vmm.Status.Phase == v1beta1.VirtualMachineMigrationFailed {
+		return nil
+	}
+
+	// Resolve the source VM.
+	var vm v1beta1.VirtualMachine
+	if err := r.Get(ctx, types.NamespacedName{Name: vmm.Spec.VMName, Namespace: vmm.Namespace}, &vm); err != nil {
+		if apierrors.IsNotFound(err) {
+			return r.fail(vmm, "VMNotFound", fmt.Sprintf("source VM %q not found", vmm.Spec.VMName))
+		}
 		return fmt.Errorf("get source VM: %s", err)
 	}
 
-	// Set the source node name if not set
-	if vmm.Status.SourceNodeName == "" && sourceVM.Status.NodeName != "" {
-		vmm.Status.SourceNodeName = sourceVM.Status.NodeName
+	if vmm.Status.SourceNodeName == "" {
+		vmm.Status.SourceNodeName = vm.Status.NodeName
 	}
 
-	// Default migration logic (live migration)
-	return r.reconcileMigration(ctx, vmm, &sourceVM)
+	// A migration is already stamped on the VM.
+	if vm.Status.Migration != nil {
+		// Guard rail: only one VMM may own a VM's migration at a time.
+		if vm.Status.Migration.UID != vmm.UID {
+			return r.fail(vmm, "MigrationInProgress",
+				fmt.Sprintf("VM %q already has an in-progress migration", vm.Name))
+		}
+		// It's ours: mirror progress back into the VMM status.
+		return r.mirror(ctx, vmm, &vm)
+	}
+
+	// No migration stamped yet — run guard rails before kicking one off.
+
+	// Guard rail: the VM must be Running to be live-migrated. Stay Pending and
+	// wait for a VM change to re-trigger us.
+	if vm.Status.Phase != v1beta1.VirtualMachineRunning {
+		vmm.Status.Phase = v1beta1.VirtualMachineMigrationPending
+		log.Info("source VM not Running yet, waiting", "vm", vm.Name, "phase", vm.Status.Phase)
+		return nil
+	}
+
+	// Guard rail: respect the Migratable condition computed by the VM
+	// controller (dedicated CPU, SR-IOV / bridged / vhost-user interfaces,
+	// containerDisk / containerRootfs volumes, fileSystems, ...).
+	cond := meta.FindStatusCondition(vm.Status.Conditions, string(v1beta1.VirtualMachineMigratable))
+	if cond == nil {
+		vmm.Status.Phase = v1beta1.VirtualMachineMigrationPending
+		log.Info("Migratable condition not yet known, waiting", "vm", vm.Name)
+		return nil
+	}
+	if cond.Status != metav1.ConditionTrue {
+		return r.fail(vmm, "NotMigratable", cond.Message)
+	}
+
+	// Kick off the pipeline by stamping the VM's migration status. The VM
+	// controller will pick this up and create the target Pod.
+	vm.Status.Migration = &v1beta1.VirtualMachineStatusMigration{
+		UID:   vmm.UID,
+		Phase: v1beta1.VirtualMachineMigrationPending,
+	}
+	if err := r.Status().Update(ctx, &vm); err != nil {
+		if apierrors.IsConflict(err) {
+			// The VM controller updated the VM concurrently; we'll be
+			// re-triggered by the VM watch and retry the stamp.
+			return nil
+		}
+		return fmt.Errorf("stamp VM migration: %s", err)
+	}
+
+	vmm.Status.Phase = v1beta1.VirtualMachineMigrationPending
+	r.Recorder.Eventf(vmm, corev1.EventTypeNormal, "MigrationStarted",
+		"Started migration of VM %q from node %q", vm.Name, vm.Status.NodeName)
+	return nil
 }
 
-func (r *VMMReconciler) reconcileMigration(ctx context.Context, vmm *v1beta1.VirtualMachineMigration, sourceVM *v1beta1.VirtualMachine) error {
-	log := ctrl.LoggerFrom(ctx)
-
-	switch vmm.Status.Phase {
-	case "":
-		// Initialize migration
-		vmm.Status.Phase = v1beta1.VirtualMachineMigrationPending
-		log.Info("Initializing migration", "source", sourceVM.Name)
-
-	case v1beta1.VirtualMachineMigrationPending:
-		// Start migration process
-		vmm.Status.Phase = v1beta1.VirtualMachineMigrationRunning
-		log.Info("Starting migration", "source", sourceVM.Name)
-
-	case v1beta1.VirtualMachineMigrationRunning:
-		// TODO: Implement actual migration logic
-		log.Info("Migration in progress", "source", sourceVM.Name)
-
-	case v1beta1.VirtualMachineMigrationSucceeded, v1beta1.VirtualMachineMigrationFailed:
-		// Migration completed, no action needed
-		log.Info("Migration completed", "source", sourceVM.Name, "status", vmm.Status.Phase)
-
-	default:
-		log.Info("Unknown migration phase", "phase", vmm.Status.Phase)
+// mirror copies the in-flight migration state from the VM into the VMM status,
+// and on terminal phases clears the VM's migration stamp.
+func (r *VMMReconciler) mirror(ctx context.Context, vmm *v1beta1.VirtualMachineMigration, vm *v1beta1.VirtualMachine) error {
+	m := vm.Status.Migration
+	vmm.Status.Phase = m.Phase
+	if m.TargetNodeName != "" {
+		vmm.Status.TargetNodeName = m.TargetNodeName
 	}
 
+	switch m.Phase {
+	case v1beta1.VirtualMachineMigrationSucceeded:
+		// By now the source has been cleaned up and vm.Status.NodeName already
+		// points at the target, so clearing the stamp is safe.
+		r.Recorder.Eventf(vmm, corev1.EventTypeNormal, "MigrationSucceeded",
+			"VM %q migrated to node %q", vm.Name, m.TargetNodeName)
+		return r.clearVMMigration(ctx, vm)
+	case v1beta1.VirtualMachineMigrationFailed:
+		r.Recorder.Eventf(vmm, corev1.EventTypeWarning, "MigrationFailed",
+			"Migration of VM %q failed", vm.Name)
+		return r.clearVMMigration(ctx, vm)
+	}
+	return nil
+}
+
+// clearVMMigration removes the migration stamp from the VM so it becomes
+// eligible for future migrations.
+func (r *VMMReconciler) clearVMMigration(ctx context.Context, vm *v1beta1.VirtualMachine) error {
+	vm.Status.Migration = nil
+	if err := r.Status().Update(ctx, vm); err != nil {
+		if apierrors.IsConflict(err) {
+			return nil
+		}
+		return fmt.Errorf("clear VM migration: %s", err)
+	}
+	return nil
+}
+
+// fail records a terminal failure on the VMM. It returns nil so the status
+// update is persisted by the caller rather than triggering a requeue.
+func (r *VMMReconciler) fail(vmm *v1beta1.VirtualMachineMigration, reason, msg string) error {
+	vmm.Status.Phase = v1beta1.VirtualMachineMigrationFailed
+	r.Recorder.Eventf(vmm, corev1.EventTypeWarning, reason, "%s", msg)
 	return nil
 }
 
 func (r *VMMReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1beta1.VirtualMachineMigration{}).
-		Watches(&v1beta1.VirtualMachine{}, handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
-			// TODO: Implement mapping logic
-			return []reconcile.Request{}
-		})).
+		Watches(&v1beta1.VirtualMachine{}, handler.EnqueueRequestsFromMapFunc(r.vmmsForVM)).
 		Complete(r)
+}
+
+// vmmsForVM maps a VirtualMachine event to the non-terminal
+// VirtualMachineMigrations that reference it, so migration progress on the VM
+// re-triggers reconciliation of the owning VMM.
+func (r *VMMReconciler) vmmsForVM(ctx context.Context, obj client.Object) []reconcile.Request {
+	vm, ok := obj.(*v1beta1.VirtualMachine)
+	if !ok {
+		return nil
+	}
+
+	var vmmList v1beta1.VirtualMachineMigrationList
+	if err := r.List(ctx, &vmmList, client.InNamespace(vm.Namespace)); err != nil {
+		return nil
+	}
+
+	var reqs []reconcile.Request
+	for i := range vmmList.Items {
+		vmm := &vmmList.Items[i]
+		if vmm.Spec.VMName != vm.Name {
+			continue
+		}
+		if vmm.Status.Phase == v1beta1.VirtualMachineMigrationSucceeded ||
+			vmm.Status.Phase == v1beta1.VirtualMachineMigrationFailed {
+			continue
+		}
+		reqs = append(reqs, reconcile.Request{
+			NamespacedName: types.NamespacedName{Name: vmm.Name, Namespace: vmm.Namespace},
+		})
+	}
+	return reqs
 }

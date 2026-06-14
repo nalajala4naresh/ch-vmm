@@ -1,0 +1,26 @@
+allowVolumeExpansion: true
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    components.gke.io/component-name: pdcsi
+    components.gke.io/component-version: 0.19.33
+    components.gke.io/layer: addon
+    storageclass.kubernetes.io/is-default-class: "true"
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+    k8s-app: gcp-compute-persistent-disk-csi-driver
+  name: hyperdisk-balanced-regional-rwx
+parameters:
+  type: hyperdisk-balanced-high-availability
+  replication-type: regional-pd
+  access-mode: ReadWriteMany
+provisioner: pd.csi.storage.gke.io
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowedTopologies:
+  - matchLabelExpressions:
+      - key: topology.gke.io/zone
+        values:
+          - us-central1-a
+          - us-central1-c
