@@ -39,6 +39,13 @@ func (r *VMMReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	if isTerminalMigrationPhase(vmm.Status.Phase) {
+		if err := r.cleanupTerminalMigration(ctx, &vmm); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
 	status := vmm.Status.DeepCopy()
 	if err := r.reconcile(ctx, &vmm); err != nil {
 		r.Recorder.Eventf(&vmm, corev1.EventTypeWarning, "FailedReconcile", "Failed to reconcile VMM: %s", err)
@@ -51,6 +58,12 @@ func (r *VMMReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 				return ctrl.Result{Requeue: true}, nil
 			}
 			return ctrl.Result{}, fmt.Errorf("update VMM status: %s", err)
+		}
+	}
+
+	if isTerminalMigrationPhase(vmm.Status.Phase) {
+		if err := r.cleanupTerminalMigration(ctx, &vmm); err != nil {
+			return ctrl.Result{}, err
 		}
 	}
 
@@ -145,8 +158,7 @@ func (r *VMMReconciler) reconcile(ctx context.Context, vmm *v1beta1.VirtualMachi
 	return nil
 }
 
-// mirror copies the in-flight migration state from the VM into the VMM status,
-// and on terminal phases clears the VM's migration stamp.
+// mirror copies the in-flight migration state from the VM into the VMM status.
 func (r *VMMReconciler) mirror(ctx context.Context, vmm *v1beta1.VirtualMachineMigration, vm *v1beta1.VirtualMachine) error {
 	m := vm.Status.Migration
 	vmm.Status.Phase = m.Phase
@@ -156,11 +168,8 @@ func (r *VMMReconciler) mirror(ctx context.Context, vmm *v1beta1.VirtualMachineM
 
 	switch m.Phase {
 	case v1beta1.VirtualMachineMigrationSucceeded:
-		// By now the source has been cleaned up and vm.Status.NodeName already
-		// points at the target, so clearing the stamp is safe.
 		r.Recorder.Eventf(vmm, corev1.EventTypeNormal, "MigrationSucceeded",
 			"VM %q migrated to node %q", vm.Name, m.TargetNodeName)
-		return r.clearVMMigration(ctx, vm)
 	case v1beta1.VirtualMachineMigrationFailed:
 		return r.handleFailedMigration(ctx, vmm, vm)
 	}
@@ -215,7 +224,7 @@ func (r *VMMReconciler) handleFailedMigration(ctx context.Context, vmm *v1beta1.
 			vm.Name, targetPodName, vm.Status.Migration.TargetNodeName)
 	}
 
-	return r.clearVMMigration(ctx, vm)
+	return nil
 }
 
 // deletePodIfExists deletes a Pod by name, treating an already-absent Pod as
@@ -239,6 +248,24 @@ func (r *VMMReconciler) clearVMMigration(ctx context.Context, vm *v1beta1.Virtua
 		return fmt.Errorf("clear VM migration: %s", err)
 	}
 	return nil
+}
+
+func (r *VMMReconciler) cleanupTerminalMigration(ctx context.Context, vmm *v1beta1.VirtualMachineMigration) error {
+	var vm v1beta1.VirtualMachine
+	if err := r.Get(ctx, types.NamespacedName{Name: vmm.Spec.VMName, Namespace: vmm.Namespace}, &vm); err != nil {
+		return client.IgnoreNotFound(err)
+	}
+
+	if vm.Status.Migration == nil || vm.Status.Migration.UID != vmm.UID {
+		return nil
+	}
+
+	return r.clearVMMigration(ctx, &vm)
+}
+
+func isTerminalMigrationPhase(phase v1beta1.VirtualMachineMigrationPhase) bool {
+	return phase == v1beta1.VirtualMachineMigrationSucceeded ||
+		phase == v1beta1.VirtualMachineMigrationFailed
 }
 
 // fail records a terminal failure on the VMM. It returns nil so the status
