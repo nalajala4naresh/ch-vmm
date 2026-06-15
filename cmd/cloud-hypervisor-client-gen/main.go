@@ -17,10 +17,8 @@ import (
 //go:embed client.go.mustache
 var clientTemplate string
 
-var allSchemas map[string]*openapi.Schema
-
 func main() {
-	resp, err := http.Get("https://raw.githubusercontent.com/cloud-hypervisor/cloud-hypervisor/v52.0/vmm/src/api/openapi/cloud-hypervisor.yaml")
+	resp, err := http.Get("https://raw.githubusercontent.com/cloud-hypervisor/cloud-hypervisor/v50.0/vmm/src/api/openapi/cloud-hypervisor.yaml")
 	if err != nil {
 		panic(err)
 	}
@@ -35,8 +33,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	allSchemas = doc.Components.Schemas
 
 	var eps []endpoint
 	for path, pathItem := range doc.Paths {
@@ -125,22 +121,12 @@ func newEndpoint(path string, pathItem *openapi.PathItem) *endpoint {
 }
 
 type type_ struct {
-	Name      string  `json:"name,omitempty"`
-	Desc      string  `json:"desc,omitempty"`
-	Fields    []field `json:"fields,omitempty"`
-	IsAlias   bool    `json:"isAlias,omitempty"`
-	AliasType string  `json:"aliasType,omitempty"`
+	Name   string  `json:"name,omitempty"`
+	Desc   string  `json:"desc,omitempty"`
+	Fields []field `json:"fields,omitempty"`
 }
 
 func newType(name string, schema *openapi.Schema) *type_ {
-	if schema.Type == "string" {
-		return &type_{
-			Name:      name,
-			Desc:      schema.Description,
-			IsAlias:   true,
-			AliasType: "string",
-		}
-	}
 	tp := &type_{
 		Name: name,
 		Desc: schema.Description,
@@ -179,11 +165,7 @@ func newField(key string, schema *openapi.Schema, required bool) *field {
 func schemaToTypeName(schema *openapi.Schema) string {
 	if schema.Ref != "" {
 		segs := strings.Split(schema.Ref, "/")
-		name := segs[len(segs)-1]
-		if refSchema, ok := allSchemas[name]; ok && refSchema.Type == "string" {
-			return name
-		}
-		return "*" + name
+		return "*" + segs[len(segs)-1]
 	}
 
 	switch schema.Type {
@@ -195,10 +177,6 @@ func schemaToTypeName(schema *openapi.Schema) string {
 			return "int16"
 		case "int64":
 			return "int64"
-		case "uint16":
-			return "uint16"
-		case "uint32":
-			return "uint32"
 		default:
 			return "int"
 		}
@@ -212,7 +190,7 @@ func schemaToTypeName(schema *openapi.Schema) string {
 		}
 		return "map[string]" + schemaToTypeName(schema.AdditionalProperties)
 	default:
-		return schema.Type
+		panic(nil)
 	}
 }
 
