@@ -919,10 +919,8 @@ func (r *VMReconciler) addHotplugVolumesToVM(ctx context.Context, vm *v1beta1.Vi
 		case v1beta1.VolumeMountedToPod:
 			if _, ok := vmDisksMap[volumeStatus.Name]; !ok {
 				diskConfig := &cloudhypervisor.DiskConfig{
-					Id:        volumeStatus.Name,
-					Direct:    true,
-					ImageType: cloudhypervisor.ImageType("Raw"),
-					Sparse:    false,
+					Id:     volumeStatus.Name,
+					Direct: true,
 				}
 
 				isBlock, err := volumeutil.IsBlock(ctx, r.Client, vm.Namespace, *volume)

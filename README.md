@@ -13,7 +13,7 @@ Compared to [KubeVirt](https://github.com/kubevirt/kubevirt), ch-vmm:
 
 Compared to [VirtInk](https://github.com/smartxworks/virtink), ch-vmm:
 - does support snapshot and restore features
-- Supports newer version k8s controller-runtime and k8s versions &  cloud-hypervisor v52.0
+- Supports newer version k8s controller-runtime and k8s versions &  cloud-hypervisor v50.0
 - `VMPool` and `VMSet` to manage fleet of VM's, checkout docs folder for examples. 
 
 ch-vmm consists of 3 components:
@@ -54,7 +54,7 @@ ch-vmm currently supports the following container runtimes:
 
 - Docker
 - containerd
-- cloud-hypervisor v52.0 is supported.
+- cloud-hypervisor v50.0 is supported.
 
 Other container runtimes, which do not use virtualization features, should work too. However, they are not tested officially.
 
