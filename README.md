@@ -1,28 +1,28 @@
-# ch-vmm: Lightweight Virtualization Add-on for Kubernetes
+# ch-operator: Lightweight Virtualization Add-on for Kubernetes
 
 [![build](https://github.com/nalajala4naresh/ch-operator/actions/workflows/build.yml/badge.svg)](https://github.com/nalajala4naresh/ch-operator/actions/workflows/build.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nalajala4naresh/ch-operator)](https://goreportcard.com/report/github.com/nalajala4naresh/ch-operator)
-[![codecov](https://codecov.io/gh/nalajala4naresh/ch-vmm/branch/main/graph/badge.svg?token=6GXYM2BFLT)](https://codecov.io/gh/nalajala4naresh/ch-vmm)
+[![codecov](https://codecov.io/gh/nalajala4naresh/ch-operator/branch/main/graph/badge.svg?token=6GXYM2BFLT)](https://codecov.io/gh/nalajala4naresh/ch-operator)
 
-ch-vmm is a [Kubernetes](https://github.com/kubernetes/kubernetes) add-on for running [Cloud Hypervisor](https://github.com/cloud-hypervisor/cloud-hypervisor) virtual machines. By using Cloud Hypervisor as the underlying hypervisor, ch-vmm enables a lightweight and secure way to run fully virtualized workloads in a canonical Kubernetes cluster.
+ch-operator is a [Kubernetes](https://github.com/kubernetes/kubernetes) add-on for running [Cloud Hypervisor](https://github.com/cloud-hypervisor/cloud-hypervisor) virtual machines. By using Cloud Hypervisor as the underlying hypervisor, ch-operator enables a lightweight and secure way to run fully virtualized workloads in a canonical Kubernetes cluster.
 
-Compared to [KubeVirt](https://github.com/kubevirt/kubevirt), ch-vmm:
+Compared to [KubeVirt](https://github.com/kubevirt/kubevirt), ch-operator:
 
 - does not use libvirt or QEMU. By leveraging Cloud Hypervisor, VMs has lower memory (≈30MB) footprints, higher performance and smaller attack surface.
 - does not require a long-running per-Pod launcher process, which further reduces runtime memory overhead (≈80MB).
 
-Compared to [VirtInk](https://github.com/smartxworks/virtink), ch-vmm:
+Compared to [VirtInk](https://github.com/smartxworks/virtink), ch-operator:
 - does support snapshot and restore features
 - Supports newer version k8s controller-runtime and k8s versions &  cloud-hypervisor v50.0
 - `VMPool` and `VMSet` to manage fleet of VM's, checkout docs folder for examples. 
 
-ch-vmm consists of 3 components:
+ch-operator consists of 3 components:
 
 - `ch-vmm-controller` is the cluster-wide controller, responsible for creating Pods to run Cloud Hypervisor VMs.
 - `ch-daemon` is the per-Node daemon, responsible for further controlling Cloud Hypervisor VMs on Node bases.
 - `virt-prerunner` is the per-Pod pre-runner, responsible for preparing VM networks and building Cloud Hypervisor VM configuration.
 
-**NOTE**: ch-vmm is still a work in progress, its API may change without prior notice.
+**NOTE**: ch-operator is still a work in progress, its API may change without prior notice.
 
 ## Installation
 
@@ -32,9 +32,9 @@ A few requirements need to be met before you can begin:
 
 - Kubernetes Version v1.35+ (In-place vertical scaling of VM with release v1.2.0)
 - Kubernetes Version < v1.35 , please use release v1.1.0
-- Kubernetes apiserver must have `--allow-privileged=true` in order to run ch-vmm's privileged DaemonSet. It's usually set by default.
+- Kubernetes apiserver must have `--allow-privileged=true` in order to run ch-operator's privileged DaemonSet. It's usually set by default.
 - [cert-manager](https://cert-manager.io/)  v1.16 installed in Kubernetes cluster. You can install it with `kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.1/cert-manager.yaml`.
-- Deploy ch-vmm onto k8s cluster with ``` kubectl apply -f https://github.com/nalajala4naresh/ch-operator/releases/latest/download/ch-vmm.yaml```
+- Deploy ch-operator onto k8s cluster with ``` kubectl apply -f https://github.com/nalajala4naresh/ch-operator/releases/latest/download/ch-operator.yaml```
 - Deploy CDI operator to manage DataVolume objects as disks to the VM's 
 
   ```bash
@@ -50,7 +50,7 @@ $ kubectl -n kube-system kustomize deploy/kubernetes/snapshot-controller | kubec
 ```
 #### Container Runtime Support
 
-ch-vmm currently supports the following container runtimes:
+ch-operator currently supports the following container runtimes:
 
 - Docker
 - containerd
@@ -130,7 +130,7 @@ Enter `password` when you are prompted to enter password, which is set by the cl
 
 
 ### Take Snapshot of the VM 
-ch-vmm supports taking snapshot of the VM's with VMSnapshot CRD, All the Datavolume or Persistent volume based disks use Default storage class VolumeSnapshot class. The memory snapshot is stored in Object storage on both S3 or GCP.
+ch-operator supports taking snapshot of the VM's with VMSnapshot CRD, All the Datavolume or Persistent volume based disks use Default storage class VolumeSnapshot class. The memory snapshot is stored in Object storage on both S3 or GCP.
 ```
 apiVersion: cloudhypervisor.quill.today/v1beta1
 kind: VMSnapShot 
@@ -146,7 +146,7 @@ spec:
 ```
 
 ### Restroing from VM Rollback
-ch-vmm supports VM rollback from a VMSnapshot, this will create a new VM but and keep the Original VM untouched.
+ch-operator supports VM rollback from a VMSnapshot, this will create a new VM but and keep the Original VM untouched.
 
 ```
 
@@ -164,7 +164,7 @@ spec:
 ```
 ### Manage the VM
 
-ch-vmm supports various VM power actions. For example, you can power off the VM created above as follows:
+ch-operator supports various VM power actions. For example, you can power off the VM created above as follows:
 
 ```bash
 export VM_NAME=ubuntu-container-rootfs
@@ -175,7 +175,7 @@ You can also `Shutdown`, `Reset`, `Reboot` or `Pause` a running VM, or `Resume` 
 
 ### VFIO GPU Passthrough
 
-ch-vmm supports GPU passthrough to VMs using VFIO (Virtual Function I/O). This allows VMs to directly access physical GPU devices for high-performance workloads such as machine learning, graphics rendering, or GPU-accelerated computing.
+ch-operator supports GPU passthrough to VMs using VFIO (Virtual Function I/O). This allows VMs to directly access physical GPU devices for high-performance workloads such as machine learning, graphics rendering, or GPU-accelerated computing.
 
 #### Prerequisites
 
