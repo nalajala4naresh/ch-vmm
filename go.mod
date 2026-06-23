@@ -1,4 +1,4 @@
-module github.com/nalajala4naresh/ch-vmm
+module github.com/nalajala4naresh/ch-operator
 
 go 1.25.4
 

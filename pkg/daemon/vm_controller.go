@@ -28,11 +28,11 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/nalajala4naresh/ch-vmm/pkg/cloudhypervisor"
-	"github.com/nalajala4naresh/ch-vmm/pkg/daemon/cgroup"
-	"github.com/nalajala4naresh/ch-vmm/pkg/daemon/pid"
-	"github.com/nalajala4naresh/ch-vmm/pkg/tlsutil"
-	"github.com/nalajala4naresh/ch-vmm/pkg/volumeutil"
+	"github.com/nalajala4naresh/ch-operator/pkg/cloudhypervisor"
+	"github.com/nalajala4naresh/ch-operator/pkg/daemon/cgroup"
+	"github.com/nalajala4naresh/ch-operator/pkg/daemon/pid"
+	"github.com/nalajala4naresh/ch-operator/pkg/tlsutil"
+	"github.com/nalajala4naresh/ch-operator/pkg/volumeutil"
 	v1beta1 "github.com/nalajala4naresh/chvmm-api/v1beta1"
 )
 

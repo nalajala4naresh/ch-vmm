@@ -11,9 +11,9 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/nalajala4naresh/ch-vmm/pkg/cloudhypervisor"
-	"github.com/nalajala4naresh/ch-vmm/pkg/cloudutils"
-	"github.com/nalajala4naresh/ch-vmm/pkg/volumeutil"
+	"github.com/nalajala4naresh/ch-operator/pkg/cloudhypervisor"
+	"github.com/nalajala4naresh/ch-operator/pkg/cloudutils"
+	"github.com/nalajala4naresh/ch-operator/pkg/volumeutil"
 	"github.com/nalajala4naresh/chvmm-api/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

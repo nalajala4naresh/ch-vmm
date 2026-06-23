@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	grpc_util "github.com/nalajala4naresh/ch-vmm/pkg/grpcutil"
+	grpc_util "github.com/nalajala4naresh/ch-operator/pkg/grpcutil"
 	"github.com/spf13/viper"
 )
 

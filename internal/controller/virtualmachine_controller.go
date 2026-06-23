@@ -34,7 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	"github.com/nalajala4naresh/ch-vmm/pkg/volumeutil"
+	"github.com/nalajala4naresh/ch-operator/pkg/volumeutil"
 	v1beta1 "github.com/nalajala4naresh/chvmm-api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	config "github.com/nalajala4naresh/ch-vmm/pkg/config"
-	daemon_client "github.com/nalajala4naresh/ch-vmm/pkg/daemon/proto"
-	grpcutil "github.com/nalajala4naresh/ch-vmm/pkg/grpcutil"
+	config "github.com/nalajala4naresh/ch-operator/pkg/config"
+	daemon_client "github.com/nalajala4naresh/ch-operator/pkg/daemon/proto"
+	grpcutil "github.com/nalajala4naresh/ch-operator/pkg/grpcutil"
 	"github.com/spf13/cobra"
 )
 

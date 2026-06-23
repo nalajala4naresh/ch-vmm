@@ -11,7 +11,7 @@ import (
 	"github.com/opencontainers/runc/libcontainer/cgroups"
 	"github.com/opencontainers/runc/libcontainer/configs"
 
-	"github.com/nalajala4naresh/ch-vmm/pkg/daemon/pid"
+	"github.com/nalajala4naresh/ch-operator/pkg/daemon/pid"
 	v1beta1 "github.com/nalajala4naresh/chvmm-api/v1beta1"
 )
 

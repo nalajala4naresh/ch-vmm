@@ -28,8 +28,8 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	"github.com/nalajala4naresh/ch-vmm/internal/controller"
-	"github.com/nalajala4naresh/ch-vmm/pkg/webhooks"
+	"github.com/nalajala4naresh/ch-operator/internal/controller"
+	"github.com/nalajala4naresh/ch-operator/pkg/webhooks"
 	v1beta1 "github.com/nalajala4naresh/chvmm-api/v1beta1"
 	// +kubebuilder:scaffold:imports
 )

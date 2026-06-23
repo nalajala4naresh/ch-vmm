@@ -1,7 +1,7 @@
 # ch-vmm: Lightweight Virtualization Add-on for Kubernetes
 
-[![build](https://github.com/nalajala4naresh/ch-vmm/actions/workflows/build.yml/badge.svg)](https://github.com/nalajala4naresh/ch-vmm/actions/workflows/build.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/nalajala4naresh/ch-vmm)](https://goreportcard.com/report/github.com/nalajala4naresh/ch-vmm)
+[![build](https://github.com/nalajala4naresh/ch-operator/actions/workflows/build.yml/badge.svg)](https://github.com/nalajala4naresh/ch-operator/actions/workflows/build.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/nalajala4naresh/ch-operator)](https://goreportcard.com/report/github.com/nalajala4naresh/ch-operator)
 [![codecov](https://codecov.io/gh/nalajala4naresh/ch-vmm/branch/main/graph/badge.svg?token=6GXYM2BFLT)](https://codecov.io/gh/nalajala4naresh/ch-vmm)
 
 ch-vmm is a [Kubernetes](https://github.com/kubernetes/kubernetes) add-on for running [Cloud Hypervisor](https://github.com/cloud-hypervisor/cloud-hypervisor) virtual machines. By using Cloud Hypervisor as the underlying hypervisor, ch-vmm enables a lightweight and secure way to run fully virtualized workloads in a canonical Kubernetes cluster.
@@ -34,7 +34,7 @@ A few requirements need to be met before you can begin:
 - Kubernetes Version < v1.35 , please use release v1.1.0
 - Kubernetes apiserver must have `--allow-privileged=true` in order to run ch-vmm's privileged DaemonSet. It's usually set by default.
 - [cert-manager](https://cert-manager.io/)  v1.16 installed in Kubernetes cluster. You can install it with `kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.1/cert-manager.yaml`.
-- Deploy ch-vmm onto k8s cluster with ``` kubectl apply -f https://github.com/nalajala4naresh/ch-vmm/releases/latest/download/ch-vmm.yaml```
+- Deploy ch-vmm onto k8s cluster with ``` kubectl apply -f https://github.com/nalajala4naresh/ch-operator/releases/latest/download/ch-vmm.yaml```
 - Deploy CDI operator to manage DataVolume objects as disks to the VM's 
 
   ```bash

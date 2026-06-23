@@ -6,7 +6,7 @@ domain: cloudhypervisor.quill.today
 layout:
 - go.kubebuilder.io/v4
 projectName: ch-vmm
-repo: github.com/nalajala4naresh/ch-vmm
+repo: github.com/nalajala4naresh/ch-operator
 resources:
 - api:
     crdVersion: v1

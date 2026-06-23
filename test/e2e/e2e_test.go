@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/nalajala4naresh/ch-vmm/test/utils"
+	"github.com/nalajala4naresh/ch-operator/test/utils"
 )
 
 const namespace = "virtmanager-system"

@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nalajala4naresh/ch-vmm/pkg/cloudhypervisor"
-	"github.com/nalajala4naresh/ch-vmm/pkg/cloudutils"
-	"github.com/nalajala4naresh/ch-vmm/pkg/daemon/proto"
-	daemon_proto "github.com/nalajala4naresh/ch-vmm/pkg/daemon/proto"
-	"github.com/nalajala4naresh/ch-vmm/pkg/volumeutil"
+	"github.com/nalajala4naresh/ch-operator/pkg/cloudhypervisor"
+	"github.com/nalajala4naresh/ch-operator/pkg/cloudutils"
+	"github.com/nalajala4naresh/ch-operator/pkg/daemon/proto"
+	daemon_proto "github.com/nalajala4naresh/ch-operator/pkg/daemon/proto"
+	"github.com/nalajala4naresh/ch-operator/pkg/volumeutil"
 	"github.com/nalajala4naresh/chvmm-api/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 

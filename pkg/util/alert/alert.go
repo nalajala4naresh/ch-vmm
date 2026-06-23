@@ -3,7 +3,7 @@ package alert
 import (
 	"fmt"
 
-	"github.com/nalajala4naresh/ch-vmm/pkg/util/metrics"
+	"github.com/nalajala4naresh/ch-operator/pkg/util/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

@@ -24,10 +24,10 @@ import (
 	"github.com/subgraph/libmacouflage"
 	"github.com/vishvananda/netlink"
 
-	"github.com/nalajala4naresh/ch-vmm/pkg/cloudhypervisor"
-	"github.com/nalajala4naresh/ch-vmm/pkg/cloudutils"
-	"github.com/nalajala4naresh/ch-vmm/pkg/cpuset"
-	"github.com/nalajala4naresh/ch-vmm/pkg/volumeutil"
+	"github.com/nalajala4naresh/ch-operator/pkg/cloudhypervisor"
+	"github.com/nalajala4naresh/ch-operator/pkg/cloudutils"
+	"github.com/nalajala4naresh/ch-operator/pkg/cpuset"
+	"github.com/nalajala4naresh/ch-operator/pkg/volumeutil"
 	"github.com/nalajala4naresh/chvmm-api/v1beta1"
 )
 

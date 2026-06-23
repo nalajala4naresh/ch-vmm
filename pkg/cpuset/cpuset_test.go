@@ -5,7 +5,7 @@ import (
 
 	assert "github.com/stretchr/testify/require"
 
-	"github.com/nalajala4naresh/ch-vmm/pkg/cpuset"
+	"github.com/nalajala4naresh/ch-operator/pkg/cpuset"
 )
 
 func TestParse(t *testing.T) {

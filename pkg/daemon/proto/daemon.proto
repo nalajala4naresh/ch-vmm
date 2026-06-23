@@ -3,7 +3,7 @@ syntax = "proto3";
 package vmservice;
 import "google/protobuf/empty.proto";
 
-option go_package = "github.com/nalajala4naresh/ch-vmm/pkg/daemon/proto";
+option go_package = "github.com/nalajala4naresh/ch-operator/pkg/daemon/proto";
 
 message GetVmstatusRequest {
 

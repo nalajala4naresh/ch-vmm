@@ -10,7 +10,7 @@ import (
 
 	"inet.af/tcpproxy"
 
-	"github.com/nalajala4naresh/ch-vmm/pkg/daemon"
+	"github.com/nalajala4naresh/ch-operator/pkg/daemon"
 )
 
 func NewRelayProvider() daemon.RelayProvider {

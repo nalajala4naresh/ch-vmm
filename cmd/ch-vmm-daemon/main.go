@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"os"
 
-	grpc "github.com/nalajala4naresh/ch-vmm/pkg/grpcutil"
-	grpc_util "github.com/nalajala4naresh/ch-vmm/pkg/grpcutil"
+	grpc "github.com/nalajala4naresh/ch-operator/pkg/grpcutil"
+	grpc_util "github.com/nalajala4naresh/ch-operator/pkg/grpcutil"
 
 	snapv1 "github.com/kubernetes-csi/external-snapshotter/client/v8/apis/volumesnapshot/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -19,11 +19,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	"github.com/nalajala4naresh/ch-vmm/pkg/config"
-	"github.com/nalajala4naresh/ch-vmm/pkg/daemon"
-	"github.com/nalajala4naresh/ch-vmm/pkg/daemon/deviceplugin"
-	daemon_proto "github.com/nalajala4naresh/ch-vmm/pkg/daemon/proto"
-	"github.com/nalajala4naresh/ch-vmm/pkg/daemon/tcpproxy"
+	"github.com/nalajala4naresh/ch-operator/pkg/config"
+	"github.com/nalajala4naresh/ch-operator/pkg/daemon"
+	"github.com/nalajala4naresh/ch-operator/pkg/daemon/deviceplugin"
+	daemon_proto "github.com/nalajala4naresh/ch-operator/pkg/daemon/proto"
+	"github.com/nalajala4naresh/ch-operator/pkg/daemon/tcpproxy"
 	v1beta1 "github.com/nalajala4naresh/chvmm-api/v1beta1"
 )
 

@@ -321,8 +321,6 @@ github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d/go.mod h1:+n7T8m
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+o7JKHSa8/e818NopupXU1YMK5fe1lsApnBw=
-github.com/nalajala4naresh/chvmm-api v1.23.0 h1:D/P6HpsfyF2MltNIhbLatfl5CsE4bd8I92dX6BMJY7I=
-github.com/nalajala4naresh/chvmm-api v1.23.0/go.mod h1:yWbAqSrkN9WNJ+4/CVvY6XwBUldM7vYGfosC+mNMQ+Y=
 github.com/nalajala4naresh/chvmm-api v1.24.0 h1:SuCiogjTB6xSfLDHuMwWfpD864EhBNahsDCTWqoR3Fo=
 github.com/nalajala4naresh/chvmm-api v1.24.0/go.mod h1:yWbAqSrkN9WNJ+4/CVvY6XwBUldM7vYGfosC+mNMQ+Y=
 github.com/namsral/flag v1.7.4-pre h1:b2ScHhoCUkbsq0d2C15Mv+VU8bl8hAXV8arnWiOHNZs=
