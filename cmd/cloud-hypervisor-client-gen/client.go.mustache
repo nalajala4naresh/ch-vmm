@@ -69,10 +69,11 @@ func (c *Client) {{name}}(ctx context.Context{{#arg}}, arg {{arg}}{{/arg}}) {{#r
 
 {{#types}}
 {{#desc}}// {{desc}}{{/desc}}
-type {{name}} struct {
+{{#isAlias}}type {{name}} {{aliasType}}{{/isAlias}}
+{{^isAlias}}type {{name}} struct {
 {{#fields}}
     {{name}} {{type}} `json:"{{key}}{{^required}},omitempty{{/required}}"`
 {{/fields}}
-}
+}{{/isAlias}}
 
 {{/types}}

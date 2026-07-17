@@ -542,6 +542,23 @@ func (r *VMReconciler) chReconcile(ctx context.Context, vm *v1beta1.VirtualMachi
 								vm.Status.Migration.Phase = v1beta1.VirtualMachineMigrationFailed
 							}
 						default:
+							// vm.send-migration returns immediately (cloud-hypervisor
+							// v53+), so a transfer that fails after it returns never
+							// reaches SendMigrationErrCh. Bound the wait: success is still
+							// signalled by the source VM pod exiting (handled above); if
+							// neither that nor an error arrives in time, fail the migration.
+							// The source VM keeps running, so this is recoverable.
+							if migrationControlBlock.RunningDeadline.IsZero() {
+								migrationControlBlock.RunningDeadline = time.Now().Add(migrationRunningTimeout)
+								r.migrationControlBlocks[vm.UID] = migrationControlBlock
+							}
+							if time.Now().After(migrationControlBlock.RunningDeadline) {
+								r.Recorder.Eventf(vm, corev1.EventTypeWarning, "FailedVMMigrate",
+									"send-migration did not complete within %s; VM is still running on source node %s",
+									migrationRunningTimeout, r.NodeName)
+								vm.Status.Migration.Phase = v1beta1.VirtualMachineMigrationFailed
+								break
+							}
 							log.Info("VM is sending migration")
 							return nil
 						}
@@ -1128,11 +1145,25 @@ type migrationControlBlock struct {
 	// is torn down (PONR) an indefinite wait would leave the VM unrecoverable
 	// with no signal, so we fail the migration past this deadline.
 	SentDeadline time.Time
+	// RunningDeadline bounds how long the source waits for the send-migration
+	// transfer to complete. As of cloud-hypervisor v53 vm.send-migration
+	// returns immediately, so a transfer that fails mid-flight no longer
+	// surfaces an error through SendMigrationErrCh; without this deadline the
+	// source would requeue indefinitely. The source VM is still running on
+	// timeout (cloud-hypervisor preserves it on migration failure), so this is
+	// a recoverable failure.
+	RunningDeadline time.Time
 }
 
 // migrationSentTimeout is the maximum time the target node waits for the
 // received VM to start running before declaring the migration failed.
 const migrationSentTimeout = 180 * time.Second
+
+// migrationRunningTimeout is the maximum time the source node waits for the
+// send-migration transfer to complete (signalled by the source VM pod exiting)
+// before declaring the migration failed. It is generous because large-memory
+// VMs can take a while to transfer.
+const migrationRunningTimeout = 10 * time.Minute
 
 type vmMountRecord struct {
 	Volumes []volumeMountRecord `json:"volumes,omitempty"`
