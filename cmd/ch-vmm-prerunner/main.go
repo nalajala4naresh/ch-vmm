@@ -105,7 +105,7 @@ func buildChVMConfig(ctx context.Context, vm *v1beta1.VirtualMachine) (*cloudhyp
 		Console: &cloudhypervisor.ConsoleConfig{
 			Mode: "Pty",
 		},
-		Serial: &cloudhypervisor.ConsoleConfig{
+		Serial: &cloudhypervisor.SerialConfig{
 			Mode: "Tty",
 		},
 		Payload: &cloudhypervisor.PayloadConfig{
